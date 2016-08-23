@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
+'use strict';
 
 let etl = require('../index');
+
+//etl.ExportFeedResourcesFromMongo();
+//etl.ExportRss();
+
+//etl.ExportWeixinWatchList();
+etl.ExportWeixinProjects();
