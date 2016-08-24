@@ -6,7 +6,6 @@
     "start": "node ./bin/run"
   },
   "dependencies": {
-    "datapumps": "~0.4.6",
     "mongodb": "~2.2.6",
     "lodash": "^4.13.1",
     "tracer": "^0.8.3"

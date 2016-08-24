@@ -3,8 +3,7 @@
 
 let etl = require('../index');
 
-//etl.ExportFeedResourcesFromMongo();
-//etl.ExportRss();
+etl.ExportRss();
 
 //etl.ExportWeixinWatchList();
-etl.ExportWeixinProjects();
+//etl.ExportWeixinProjects();
