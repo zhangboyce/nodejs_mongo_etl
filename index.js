@@ -1,8 +1,12 @@
 'use strict';
 
 module.exports = {
-  ExportRss: require('./lib/ExportRss'),
+  ExportRssProjects: require('./lib/ExportRss').exportRssProjects,
+  ExportRssWatchList: require('./lib/ExportRss').exportRssWatchList,
 
   ExportWeixinWatchList: require('./lib/ExportWeixin').exportWeixinWatchList,
-  ExportWeixinProjects: require('./lib/ExportWeixin').exportWeixinProjects
+  ExportWeixinProjects: require('./lib/ExportWeixin').exportWeixinProjects,
+
+  ExportInstagramWatchList: require('./lib/ExportInstagram').exportInstagramWatchList,
+  ExportInstagramProjects: require('./lib/ExportInstagram').exportInstagramProjects
 };
