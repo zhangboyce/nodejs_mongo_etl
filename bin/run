@@ -4,10 +4,10 @@
 let etl = require('../index');
 
 //etl.ExportRssWatchList();
-//etl.ExportRssProjects();
+etl.ExportRssProjects();
 
 //etl.ExportWeixinWatchList();
 //etl.ExportWeixinProjects();
 
 //etl.ExportInstagramWatchList();
-etl.ExportInstagramProjects();
+//etl.ExportInstagramProjects();
