@@ -5,9 +5,16 @@
   "scripts": {
     "start": "node ./bin/run"
   },
+
   "dependencies": {
     "mongodb": "~2.2.6",
     "lodash": "^4.13.1",
-    "tracer": "^0.8.3"
+    "tracer": "^0.8.3",
+    "shelljs": "^0.7.4",
+    "yargs": "^5.0.0"
+  },
+
+  "bin": {
+    "run": "./bin/run"
   }
 }
