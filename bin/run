@@ -1,19 +1,33 @@
 #!/usr/bin/env node
 'use strict';
 
+const rss = 'rss';
+const wechat = 'wechat';
+const instagram = 'instagram';
+const facebook = 'facebook';
+const twitter = 'twitter';
+
+const project = 'project';
+const watchlist = 'watchlist';
+
+let default_type = wechat;
+let default_data = project;
+
 let type_arg_option = {
     demand: 'true',
     type:'string',
+    default: default_type,
     alias:'type',
     describe: 'the data-type you will export.',
-    choices: ['rss', 'wechat', 'instagram']
+    choices: [rss, wechat, instagram, facebook, twitter]
 };
 let data_arg_option = {
     demand: 'true',
     type:'string',
+    default: default_data,
     alias:'data',
     describe: 'the data you will export.',
-    choices: ['watchlist', 'project']
+    choices: [watchlist, project]
 };
 let argv = require('yargs')
     .option('t', type_arg_option)
@@ -33,14 +47,18 @@ echo(`run --type ${type} --data ${data}`);
 
 let etl = require('../index');
 
-if (data === 'watchlist') {
-    if (type === 'rss') etl.ExportRssWatchList();
-    if (type === 'wechat') etl.ExportWeixinWatchList();
-    if (type === 'instagram') etl.ExportInstagramWatchList();
+if (data === watchlist) {
+    if (type === rss) etl.ExportRssWatchList();
+    if (type === wechat) etl.ExportWeixinWatchList();
+    if (type === instagram) etl.ExportInstagramWatchList();
+    if (type === facebook) etl.ExportFacebookWatchList();
+    if (type === twitter) etl.ExportTwitterWatchList();
 }
 
-if (data === 'project') {
-    if (type === 'rss') etl.ExportRssProjects();
-    if (type === 'wechat') etl.ExportWeixinProjects();
-    if (type === 'instagram') etl.ExportInstagramProjects();
+if (data === project) {
+    if (type === rss) etl.ExportRssProjects();
+    if (type === wechat) etl.ExportWeixinProjects();
+    if (type === instagram) etl.ExportInstagramProjects();
+    if (type === facebook) etl.ExportFacebookProjects();
+    if (type === twitter) etl.ExportTwitterProjects();
 }
