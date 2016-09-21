@@ -19,6 +19,6 @@ module.exports = {
   ExportWebsiteWatchList: require('./lib/ExportWebsite').exportWatchList,
   ExportWebsiteProjects: require('./lib/ExportWebsite').exportProjects,
 
-  ImportProject2ES: require('./lib/import2ES').importProject,
-  ImportFeedSource2ES: require('./lib/import2ES').importFeedSource
+  ImportProject2ES: require('./lib/ImportEs').importProject,
+  ImportFeedSource2ES: require('./lib/ImportEs').importFeedSource
 };
