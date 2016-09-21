@@ -1,64 +1,52 @@
 #!/usr/bin/env node
 'use strict';
 
-const rss = 'rss';
-const wechat = 'wechat';
-const instagram = 'instagram';
-const facebook = 'facebook';
-const twitter = 'twitter';
+let cron = require('node-cron');
+let arg_option = require('../lib/execute/ArgOption');
+let Executor = require('../lib/execute/Executor');
+let Constant = require('../lib/execute/Constant');
 
-const project = 'project';
-const watchlist = 'watchlist';
-
-let default_type = wechat;
-let default_data = project;
-
-let type_arg_option = {
-    demand: 'true',
-    type:'string',
-    default: default_type,
-    alias:'type',
-    describe: 'the data-type you will export.',
-    choices: [rss, wechat, instagram, facebook, twitter]
-};
-let data_arg_option = {
-    demand: 'true',
-    type:'string',
-    default: default_data,
-    alias:'data',
-    describe: 'the data you will export.',
-    choices: [watchlist, project]
-};
 let argv = require('yargs')
-    .option('t', type_arg_option)
-    .option('d', data_arg_option)
+    .option('t', arg_option.type)
+    .option('d', arg_option.data)
+    .option('h', arg_option.hours)
+    .option('r', arg_option.range)
+    .option('i', arg_option.import)
+    .option('c', arg_option.cron)
     .usage('Usage: run [options]')
-    .example('run -t rss -d project', `exporting rss's projects.`)
-    .help('h')
-    .alias('h', 'help')
+    .example('run -t feed -d project -h 48 -r 500 -i mongo',
+        `exporting rss's projects before 48 hours and one time export 500 projects.`)
+    .help('help')
     .argv;
 
-let type = argv.type;
-let data = argv.data;
-let options = {};
+let options = {
+    type: argv.type,
+    data: argv.data,
+    hours: argv.hours,
+    range: argv.range
+};
+let _import = argv.import;
+let _cron = argv.cron;
 
 let shell = require('shelljs/global');
-echo(`run --type ${type} --data ${data}`);
+echo(`run --options ${JSON.stringify(options)} --import ${_import} --cron ${_cron}`);
 
-let etl = require('../index');
+let executor = new Executor(options);
+let run = ()=> {
+    if (!_import) {
+        executor.import2Mongo();
+        executor.import2ES();
+    }
+    if (_import === Constant.IMPORT_MONGO) executor.import2Mongo();
+    if (_import === Constant.IMPORT_ES) executor.import2ES();
+};
 
-if (data === watchlist) {
-    if (type === rss) etl.ExportRssWatchList();
-    if (type === wechat) etl.ExportWeixinWatchList();
-    if (type === instagram) etl.ExportInstagramWatchList();
-    if (type === facebook) etl.ExportFacebookWatchList();
-    if (type === twitter) etl.ExportTwitterWatchList();
+if (_cron) {
+    cron.schedule(_cron, ()=>{
+        echo(`cron: ${_cron}`);
+        run();
+    });
+} else {
+    run();
 }
 
-if (data === project) {
-    if (type === rss) etl.ExportRssProjects();
-    if (type === wechat) etl.ExportWeixinProjects();
-    if (type === instagram) etl.ExportInstagramProjects();
-    if (type === facebook) etl.ExportFacebookProjects();
-    if (type === twitter) etl.ExportTwitterProjects();
-}

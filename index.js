@@ -16,6 +16,9 @@ module.exports = {
   ExportTwitterWatchList: require('./lib/ExportTwitter').exportWatchList,
   ExportTwitterProjects: require('./lib/ExportTwitter').exportProjects,
 
-  //ImportProject2ES: require('./lib/Import2ES').importProject,
-  //ImportFeedSource2ES: require('./lib/Import2ES').importFeedSource
+  ExportWebsiteWatchList: require('./lib/ExportWebsite').exportWatchList,
+  ExportWebsiteProjects: require('./lib/ExportWebsite').exportProjects,
+
+  ImportProject2ES: require('./lib/Import2ES').importProject,
+  ImportFeedSource2ES: require('./lib/Import2ES').importFeedSource
 };
