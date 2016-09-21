@@ -10,8 +10,6 @@ exports.mongo_config = {
     import: {
         host: '192.168.100.83',
         port: '27017',
-        username: '',
-        password: ''
     }
 };
 
