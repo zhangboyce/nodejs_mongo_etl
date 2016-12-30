@@ -1,24 +1,24 @@
 'use strict';
 
 module.exports = {
-  ExportRssProjects: require('./lib/ExportRss').exportProjects,
-  ExportRssWatchList: require('./lib/ExportRss').exportWatchList,
+  ExportRssProjects: require('./src/ExportRss').exportProjects,
+  ExportRssWatchList: require('./src/ExportRss').exportWatchList,
 
-  ExportWeixinWatchList: require('./lib/ExportWeixin').exportWatchList,
-  ExportWeixinProjects: require('./lib/ExportWeixin').exportProjects,
+  ExportWeixinWatchList: require('./src/ExportWeixin').exportWatchList,
+  ExportWeixinProjects: require('./src/ExportWeixin').exportProjects,
 
-  ExportInstagramWatchList: require('./lib/ExportInstagram').exportWatchList,
-  ExportInstagramProjects: require('./lib/ExportInstagram').exportProjects,
+  ExportInstagramWatchList: require('./src/ExportInstagram').exportWatchList,
+  ExportInstagramProjects: require('./src/ExportInstagram').exportProjects,
 
-  ExportFacebookWatchList: require('./lib/ExportFacebook').exportWatchList,
-  ExportFacebookProjects: require('./lib/ExportFacebook').exportProjects,
+  ExportFacebookWatchList: require('./src/ExportFacebook').exportWatchList,
+  ExportFacebookProjects: require('./src/ExportFacebook').exportProjects,
 
-  ExportTwitterWatchList: require('./lib/ExportTwitter').exportWatchList,
-  ExportTwitterProjects: require('./lib/ExportTwitter').exportProjects,
+  ExportTwitterWatchList: require('./src/ExportTwitter').exportWatchList,
+  ExportTwitterProjects: require('./src/ExportTwitter').exportProjects,
 
-  ExportWebsiteWatchList: require('./lib/ExportWebsite').exportWatchList,
-  ExportWebsiteProjects: require('./lib/ExportWebsite').exportProjects,
+  ExportWebsiteWatchList: require('./src/ExportWebsite').exportWatchList,
+  ExportWebsiteProjects: require('./src/ExportWebsite').exportProjects,
 
-  ImportProject2ES: require('./lib/ImportEs').importProject,
-  ImportFeedSource2ES: require('./lib/ImportEs').importFeedSource
+  ImportProject2ES: require('./src/ImportEs').importProject,
+  ImportFeedSource2ES: require('./src/ImportEs').importFeedSource
 };

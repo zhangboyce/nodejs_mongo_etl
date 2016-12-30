@@ -4,17 +4,16 @@ let _ = require('lodash');
 let cheerio = require('cheerio');
 let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
-let Export = require('./Export');
-let mongo_config = require('./../Config').mongo_config;
+let Constant = require('./execute/Constant');
 
 exports.exportWatchList = function(options) {
-    let mongoConfig = Export.watchListMongoConfig('website_watchlist');
-    Export.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
+    let mongoConfig = ExportWatchList.watchListMongoConfig('website_watchlist');
+    ExportWatchList.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = Export.projectMongoConfig('website', mongo_config.export_content_url);
-    Export.exportProjects(options, mongoConfig, convert2Project)
+    let mongoConfig = ExportProject.projectMongoConfig('website', Constant.MONGO_EXPORT_CONTENTPOOL);
+    ExportProject.exportProjects(options, mongoConfig, convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {

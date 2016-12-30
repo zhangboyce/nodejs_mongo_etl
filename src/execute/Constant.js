@@ -12,3 +12,9 @@ exports.DATA_FEEDSOURCE = 'feedsource';
 
 exports.IMPORT_MONGO = 'mongo';
 exports.IMPORT_ES = 'es';
+
+exports.MONGO_EXPORT_CONTENTPOOL = 'mongo.export.content_pool';
+exports.MONGO_EXPORT_RAW = 'mongo.export.raw';
+exports.MONGO_IMPORT = 'mongo.import';
+exports.ES_EXPORT = 'es.export';
+exports.ES_IMPORT = 'es.import';

@@ -1,8 +1,10 @@
 'use strict';
 
 let _ = require('lodash');
-let ConnectMongo = require('./ConnectMongo');
 let co = require('co');
+let utils = require('./utils');
+let Context = require('./Context');
+let Constant = require('../execute/Constant');
 
 module.exports = ExportWatchList;
 
@@ -11,6 +13,29 @@ function ExportWatchList(mongoConfig, criteria, fields) {
     this.criteria = criteria || {};
     this.fields = fields || {};
 }
+
+ExportWatchList.watchListMongoConfig = function(exportCollection, exportDb) {
+    return {
+        exportDb: exportDb || Constant.MONGO_EXPORT_RAW,
+        exportCollection: exportCollection,
+
+        importDb: Constant.MONGO_IMPORT,
+        importCollection: 'feedsources'
+    };
+
+};
+
+ExportWatchList.exportWatchList = function(options, mongoConfig, convertorFtn) {
+    let hours = options.hours;
+    let range = options.range;
+    let type = options.type;
+
+    let criteria = utils.criteria(hours);
+    let fields = {'importio': 0};
+
+    let exportWatchList = new ExportWatchList(mongoConfig, criteria, fields);
+    exportWatchList.execute(convertorFtn(type));
+};
 
 ExportWatchList.prototype.execute = function(callback) {
 
@@ -34,7 +59,6 @@ ExportWatchList.prototype.execute = function(callback) {
         let cursor = exportDb.collection(this.mongoConfig.exportCollection).find(this.criteria, this.fields);
         let results = yield cursor.toArray();
         console.log(`query ${results.length} watch-lists, criteria: ${JSON.stringify(this.criteria)}`);
-        exportDb.close();
 
         return results;
     }
@@ -50,14 +74,13 @@ ExportWatchList.prototype.execute = function(callback) {
 
         let result = yield batch.execute();
         console.log('Inserted result: ' + JSON.stringify(result));
-        importDb.close();
     }
 };
 
 ExportWatchList.prototype._getExportDbPromise = function() {
-    return ConnectMongo(this.mongoConfig.exportUrl);
+    return Context.get(this.mongoConfig.exportDb);
 };
 
 ExportWatchList.prototype._getImportDbPromise = function() {
-    return ConnectMongo(this.mongoConfig.importUrl);
+    return Context.get(this.mongoConfig.importDb);
 };

@@ -3,8 +3,8 @@
 let _ = require('lodash');
 let cheerio = require('cheerio');
 let co = require('co');
-let ConnectMongo = require('./common/ConnectMongo');
-let es_etl_config = require('./../Config').es_etl_config;
+let Context = require('./common/Context');
+let Constant = require('./execute/Constant');
 let Elasticsearch = require('./elasticsearch/Elasticsearch');
 let utils = require('./common/utils');
 
@@ -19,8 +19,8 @@ function importProject (options) {
     let criteria = _.assign(utils.criteria(hours), {type: type});
 
     co(function* () {
-        let elasticsearch = new Elasticsearch('boom', 'project', es_etl_config.es);
-        let db = yield ConnectMongo(es_etl_config.mongo.url);
+        let elasticsearch = new Elasticsearch('boom', 'project', Context.get(Constant.ES_IMPORT));
+        let db = yield Context.get(Constant.ES_EXPORT);
         let collection = 'projects';
 
         let count = yield db.collection(collection).count(criteria);
@@ -119,9 +119,9 @@ function importFeedSource(options) {
     let criteria = _.assign(utils.criteria(hours), {type: type});
 
     co(function* () {
-        let elasticsearch = new Elasticsearch('boom', 'feedsource', es_etl_config.es);
+        let elasticsearch = new Elasticsearch('boom', 'feedsource', Context.get(Constant.ES_IMPORT));
 
-        let db = yield ConnectMongo(es_etl_config.mongo.url);
+        let db = yield Context.get(Constant.ES_EXPORT);
         let feedsourceCursor = db.collection('feedsources').find(criteria);
         let feedsources = yield feedsourceCursor.toArray();
 

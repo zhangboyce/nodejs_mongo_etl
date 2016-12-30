@@ -1,10 +1,20 @@
 #!/usr/bin/env node
 'use strict';
-
 let cron = require('node-cron');
-let arg_option = require('../lib/execute/ArgOption');
-let Executor = require('../lib/execute/Executor');
-let Constant = require('../lib/execute/Constant');
+let arg_option = require('./src/execute/ArgOption');
+let Executor = require('./src/execute/Executor');
+let Constant = require('./src/execute/Constant');
+let Context = require('./src/common/Context');
+
+// connect mongo db
+let ConnectMongo = require('./src/common/ConnectMongo');
+let config = require('config');
+
+Context.set(Constant.MONGO_EXPORT_CONTENTPOOL, ConnectMongo(config.get(Constant.MONGO_EXPORT_CONTENTPOOL)));
+Context.set(Constant.MONGO_EXPORT_RAW, ConnectMongo(config.get(Constant.MONGO_EXPORT_RAW)));
+Context.set(Constant.MONGO_IMPORT, ConnectMongo(config.get(Constant.MONGO_IMPORT)));
+Context.set(Constant.ES_EXPORT, ConnectMongo(config.get(Constant.ES_EXPORT)));
+Context.set(Constant.ES_IMPORT, config.get(Constant.ES_IMPORT));
 
 let argv = require('yargs')
     .option('t', arg_option.type)

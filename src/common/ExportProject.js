@@ -1,9 +1,10 @@
 'use strict';
 
 let _ = require('lodash');
-let ConnectMongo = require('./ConnectMongo');
-let utils = require('../common/utils');
+let utils = require('./utils');
 let co = require('co');
+let Context = require('./Context');
+let Constant = require('../execute/Constant');
 
 module.exports = ExportProject;
 
@@ -17,6 +18,31 @@ function ExportProject(mongoConfig, criteria, fields, type, range) {
     this.feedsources = [];
     this.importDb = null;
 }
+
+ExportProject.projectMongoConfig = function(exportCollection, exportDb) {
+    return {
+        exportDb: exportDb || Constant.MONGO_EXPORT_RAW,
+        exportCollection: exportCollection,
+
+        importDb: Constant.MONGO_IMPORT,
+        importCollection: 'projects',
+
+        feedSourcesDb: Constant.MONGO_IMPORT,
+        feedSourcesCollection: 'feedsources'
+    };
+};
+
+ExportProject.exportProjects = function(options, mongoConfig, convertorFtn) {
+    let hours = options.hours;
+    let range = options.range;
+    let type = options.type;
+
+    let criteria = utils.criteria(hours);
+    let fields = {'bosonnlp.wordseg': 0};
+
+    let exportProject = new ExportProject(mongoConfig, criteria, fields, type, range);
+    exportProject.execute(convertorFtn(type));
+};
 
 /**
  *
@@ -38,7 +64,6 @@ ExportProject.prototype.execute = function(callback) {
             yield queryProjects.call(this);
 
             console.log('> Exporting completed!');
-            this.importDb && this.importDb.close();
         }
 
     }.bind(this)).catch(err => {
@@ -53,7 +78,6 @@ ExportProject.prototype.execute = function(callback) {
         let items = yield results.toArray();
 
         console.log(`Query ${items.length} ${this.type} feed-sources.`);
-        feedSourcesDb.close();
 
         if (items.length != 0) {
             let feedSources = {};
@@ -84,7 +108,6 @@ ExportProject.prototype.execute = function(callback) {
                 condition = yield _step.apply(this, [exportDb, condition, count, i]);
             }
         }
-        exportDb.close();
     }
 
     function* _step(exportDb, condition, count, i) {
@@ -149,17 +172,18 @@ ExportProject.prototype.execute = function(callback) {
         if (projectTextBatch.length != 0) {
             yield projectTextBatch.execute();
         }
+
     }
 };
 
 ExportProject.prototype._getFeedSourcesDbPromise = function() {
-    return ConnectMongo(this.mongoConfig.feedSourcesUrl);
+    return Context.get(this.mongoConfig.feedSourcesDb);
 };
 
 ExportProject.prototype._getExportDbPromise = function() {
-    return ConnectMongo(this.mongoConfig.exportUrl);
+    return Context.get(this.mongoConfig.exportDb);
 };
 
 ExportProject.prototype._getImportDbPromise = function() {
-    return ConnectMongo(this.mongoConfig.importUrl);
+    return Context.get(this.mongoConfig.importDb);
 };
