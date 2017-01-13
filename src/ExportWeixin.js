@@ -6,6 +6,7 @@ let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
 let Export = require('./common/Export');
 let Constant = require('./execute/Constant');
+let Context = require('./common/Context');
 
 exports.exportWatchList = function(options) {
     let mongoConfig = ExportWatchList.watchListMongoConfig('weixin_watchlist');

@@ -68,6 +68,15 @@ Executor.prototype.import2ES = function() {
     }
 };
 
+Executor.prototype.importRaL = function() {
+
+    if (this.options.type != Constant.TYPE_WECHAT) {
+        console.log('Cannot import read and like num from type expect wechat. type: ' + this.options.type );
+        return;
+    }
+    etl.ImportWeixinReadAndLikeNum(this.options);
+};
+
 Executor.prototype.init = () => {
     let executors = new Map();
     let projectMap = new Map();

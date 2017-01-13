@@ -14,6 +14,7 @@ let feedsource = Constant.DATA_FEEDSOURCE;
 
 let mongo = Constant.IMPORT_MONGO;
 let es = Constant.IMPORT_ES;
+let ral = Constant.IMPORT_RAL;
 
 exports.type = {
     alias:'type',
@@ -50,7 +51,7 @@ exports.import = {
     alias:'import',
     type:'string',
     describe: 'import to mongo or es.',
-    choices: [mongo, es]
+    choices: [mongo, es, ral]
 };
 
 exports.cron = {

@@ -5,16 +5,8 @@ let arg_option = require('./src/execute/ArgOption');
 let Executor = require('./src/execute/Executor');
 let Constant = require('./src/execute/Constant');
 let Context = require('./src/common/Context');
-
-// connect mongo db
 let ConnectMongo = require('./src/common/ConnectMongo');
 let config = require('config');
-
-Context.set(Constant.MONGO_EXPORT_CONTENTPOOL, ConnectMongo(config.get(Constant.MONGO_EXPORT_CONTENTPOOL)));
-Context.set(Constant.MONGO_EXPORT_RAW, ConnectMongo(config.get(Constant.MONGO_EXPORT_RAW)));
-Context.set(Constant.MONGO_IMPORT, ConnectMongo(config.get(Constant.MONGO_IMPORT)));
-Context.set(Constant.ES_EXPORT, ConnectMongo(config.get(Constant.ES_EXPORT)));
-Context.set(Constant.ES_IMPORT, config.get(Constant.ES_IMPORT));
 
 let argv = require('yargs')
     .option('t', arg_option.type)
@@ -42,21 +34,30 @@ let shell = require('shelljs/global');
 echo(`run --options ${JSON.stringify(options)} --import ${_import} --cron ${_cron}`);
 
 let executor = new Executor(options);
-let run = ()=> {
-    if (!_import) {
-        executor.import2Mongo();
-        executor.import2ES();
-    }
-    if (_import === Constant.IMPORT_MONGO) executor.import2Mongo();
-    if (_import === Constant.IMPORT_ES) executor.import2ES();
-};
+let run;
+if (_import === Constant.IMPORT_MONGO) {
+    Context.set(Constant.MONGO_EXPORT_CONTENTPOOL, ConnectMongo(config.get(Constant.MONGO_EXPORT_CONTENTPOOL)));
+    Context.set(Constant.MONGO_EXPORT_RAW, ConnectMongo(config.get(Constant.MONGO_EXPORT_RAW)));
+    Context.set(Constant.MONGO_IMPORT, ConnectMongo(config.get(Constant.MONGO_IMPORT)));
+    run = executor.import2Mongo;
+}
+if (_import === Constant.IMPORT_ES) {
+    Context.set(Constant.ES_EXPORT, ConnectMongo(config.get(Constant.ES_EXPORT)));
+    Context.set(Constant.ES_IMPORT, config.get(Constant.ES_IMPORT));
+    run = executor.import2ES;
+}
+if (_import === Constant.IMPORT_RAL) {
+    Context.set(Constant.REDIS_EXPORT, ConnectMongo(config.get(Constant.REDIS_EXPORT)));
+    Context.set(Constant.REDIS_IMPORT, config.get(Constant.REDIS_IMPORT));
+    run = executor.importRaL;
+}
 
 if (_cron) {
     cron.schedule(_cron, ()=>{
         echo(`cron: ${_cron}`);
-        run();
+        run.call(executor);
     });
 } else {
-    run();
+    run.call(executor);
 }
 
