@@ -19,9 +19,9 @@ function ExportProject(mongoConfig, criteria, fields, type, range) {
     this.importDb = null;
 }
 
-ExportProject.projectMongoConfig = function(exportCollection, exportDb) {
+ExportProject.projectMongoConfig = function(exportCollection) {
     return {
-        exportDb: exportDb || Constant.MONGO_EXPORT_RAW,
+        exportDb: Constant.MONGO_EXPORT_RAW,
         exportCollection: exportCollection,
 
         importDb: Constant.MONGO_IMPORT,
@@ -38,7 +38,7 @@ ExportProject.exportProjects = function(options, mongoConfig, convertorFtn) {
     let type = options.type;
 
     let criteria = utils.criteria(hours);
-    let fields = {'bosonnlp.wordseg': 0};
+    let fields = {  };
 
     let exportProject = new ExportProject(mongoConfig, criteria, fields, type, range);
     exportProject.execute(convertorFtn(type));
@@ -56,15 +56,17 @@ ExportProject.prototype.execute = function(callback) {
             return null;
         }
 
+        let count = 0;
+        let start = Date.now();
+
         let feedSources = yield queryFeedSources.call(this);
         if (feedSources) {
             this.importDb = yield this._getImportDbPromise();
             this.feedsources = feedSources;
 
-            yield queryProjects.call(this);
-
-            console.log('> Exporting completed!');
+            count = yield exportProjects.call(this);
         }
+        console.log(`> Export ${ count } ${ this.type } projects completed, and take: ${ (Date.now() - start)/1000 } s.`);
 
     }.bind(this)).catch(err => {
         console.log(err);
@@ -72,34 +74,32 @@ ExportProject.prototype.execute = function(callback) {
 
     function* queryFeedSources() {
         let collection = this.mongoConfig.feedSourcesCollection;
-
         let feedSourcesDb = yield this._getFeedSourcesDbPromise();
         let results = feedSourcesDb.collection(collection).find({type: this.type});
+
         let items = yield results.toArray();
+        let feedSources = {};
+        let start = Date.now();
 
-        console.log(`Query ${items.length} ${this.type} feed-sources.`);
-
-        if (items.length != 0) {
-            let feedSources = {};
-            for (let i = 0; i < items.length; i++) {
-                let result = items[i];
-                let originId = result.originId;
-                feedSources[originId.replace(this.type + '/', '')] = result._id;
-            }
-            return feedSources;
-
-        } else {
-            console.log(`No ${this.type} feed-sources.`);
-            return null;
+        for (let i = 0; i < items.length; i++) {
+            let result = items[i];
+            let originId = result.originId;
+            feedSources[originId.replace(this.type + '/', '')] = result._id;
         }
+        console.log(`Query ${ items.length } ${this.type} feedSources, and take: ${ (Date.now() - start) / 1000 } s.`);
+
+        return feedSources;
     }
 
-    function* queryProjects() {
+    function* exportProjects() {
         let exportDb = yield this._getExportDbPromise();
 
+        let start = Date.now();
         let collection = this.mongoConfig.exportCollection;
         let count = yield exportDb.collection(collection).count(this.criteria);
-        console.log(`Query ${count} ${this.type} projects.`);
+
+        console.log(`Count ${count} ${this.type} projects, and take: ${ (Date.now() - start)/1000 } s.`);
+
         if (count > 0) {
             // init first query condition
             let condition = utils.mergeCriteria(this.criteria);
@@ -108,15 +108,15 @@ ExportProject.prototype.execute = function(callback) {
                 condition = yield _step.apply(this, [exportDb, condition, count, i]);
             }
         }
+        return count;
     }
 
     function* _step(exportDb, condition, count, i) {
+
+        let start = Date.now();
         let collection = this.mongoConfig.exportCollection;
         let cursor = exportDb.collection(collection).find(condition, this.fields).sort({_id: 1}).limit(this.range);
         let _results = yield cursor.toArray();
-
-        console.log(`Query ${this.type} projects (completed=${this.range*i + _results.length}, count=${count}), condition: ${JSON.stringify(condition)}`);
-
         if (_results.length > 0) {
             // for each every item, execute callback function to handle result.
             let items = [];
@@ -129,11 +129,18 @@ ExportProject.prototype.execute = function(callback) {
 
             // insert project and project text
             yield insertProjects.call(this, items);
-            yield insertProjectTexts.call(this, items);
+            if ([
+                    Constant.TYPE_WECHAT,
+                    Constant.TYPE_WEBSITE,
+                    Constant.TYPE_FEED].indexOf(this.type) != -1) {
+
+                yield insertProjectTexts.call(this, items);
+            }
 
             // update the next query condition, get the last result's _id
             condition =  utils.mergeCriteria(this.criteria, _results[_results.length - 1]._id);
         }
+        console.log(`Export ${this.type} projects (completed=${this.range*i + _results.length}, count=${count}), condition: ${JSON.stringify(condition)}, and take: ${ (Date.now() - start)/1000 } s.`);
 
         return condition;
     }
@@ -144,13 +151,14 @@ ExportProject.prototype.execute = function(callback) {
         _.each(items, item => {
             let _item = _.assign({}, item);
             delete _item.html_content;
-            //delete _item._id;
-            importBatch.find({id: item.id}).upsert().updateOne(_item);
+            importBatch.find({id: item.id}).upsert().updateOne({ $set: _item });
+
+            console.log(`Add a ${ this.type } project: ${ JSON.stringify(_item, null, 0) }.`);
         });
 
         if (importBatch.length != 0) {
-            yield importBatch.execute();
-            console.log(`> Inserted ${items.length} ${this.type} projects. ${items[0]}`);
+            let result = yield importBatch.execute();
+            console.log(`Inserted ${ importBatch.length } ${ this.type } projects.`);
         }
     }
 
@@ -161,18 +169,20 @@ ExportProject.prototype.execute = function(callback) {
 
         for (let i = 0; i < items.length; i++) {
             let item = items[i];
-
             let project = yield projectCollection.findOne({id: item.id}, {_id:1});
             let _id = project._id.toString();
-
             yield projectTextCollection.removeOne({_id: _id});
-            projectTextBatch.insert({_id: _id, text: item.html_content})
+
+            let project_text = { _id: _id, text: item.html_content };
+            projectTextBatch.insert(project_text);
+
+            console.log(`Add a ${ this.type } projecttext: ${ JSON.stringify(project_text, null, 0) }.`);
         }
 
         if (projectTextBatch.length != 0) {
-            yield projectTextBatch.execute();
+            let result = yield projectTextBatch.execute();
+            console.log(`Inserted ${ projectTextBatch.length } ${ this.type } projecttexts.`);
         }
-
     }
 };
 

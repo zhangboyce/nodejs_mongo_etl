@@ -2,6 +2,7 @@
 
 let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
+let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
     let mongoConfig = ExportWatchList.watchListMongoConfig('facebook_watchlist');
@@ -24,8 +25,7 @@ function convertWatchList2FeedSource(type) {
             iconUrl: result.cover && result.cover.source,
             readers: 0,
             velocity: 0,
-            dateCreated: new Date(),
-            lastUpdated: new Date(),
+            dateImported: new Date(),
             desc: result.about,
             from: 'imported'
         };
@@ -35,8 +35,11 @@ function convertWatchList2FeedSource(type) {
 
 function convert2Project(type) {
     return (result, feedSources) => {
+        if (!result) return null;
+
         let feed = feedSources[result.from.id].toHexString();
         if (feed) {
+            let tags = utils.extractTags(result.message);
             return {
                 id: result.id,
                 title: result.name,
@@ -44,10 +47,9 @@ function convert2Project(type) {
                 feed: feed,
                 originUrl: result.link,
                 type: type,
-                dateCreated: new Date(),
-                lastUpdated: new Date(),
+                dateImported: new Date(),
                 datePublished: new Date(),
-                tags: [],
+                tags: tags,
                 isDel: 0,
                 desc: result.message,
                 from: 'imported'

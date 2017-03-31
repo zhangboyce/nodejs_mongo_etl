@@ -2,9 +2,11 @@
 
 let _ = require('lodash');
 let cheerio = require('cheerio');
+let nodejieba = require('nodejieba');
 let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
 let Export = require('./common/Export');
+let utils = require('./common/utils');
 let Constant = require('./execute/Constant');
 let Context = require('./common/Context');
 
@@ -14,7 +16,7 @@ exports.exportWatchList = function(options) {
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('weixin', Constant.MONGO_EXPORT_CONTENTPOOL);
+    let mongoConfig = ExportProject.projectMongoConfig('weixin_article_list');
     ExportProject.exportProjects(options, mongoConfig, convert2Project)
 };
 
@@ -29,8 +31,7 @@ function convertWatchList2FeedSource(type) {
             iconUrl: result.avatar,
             readers: 0,
             velocity: 0,
-            dateCreated: new Date(),
-            lastUpdated: new Date(),
+            dateImported: new Date(),
             desc: result.description,
             from: 'imported'
         };
@@ -39,23 +40,32 @@ function convertWatchList2FeedSource(type) {
 
 function convert2Project(type) {
     return (result, feedSources) => {
-        let keywords = result.bosonnlp && result.bosonnlp.keywords;
-        let tags = _.slice(_.map(keywords, keyword => { return keyword[1] }), 0, 10);
+        if (!result) return null;
+
         let feed = feedSources[result.biz] && feedSources[result.biz].toHexString();
         if (feed) {
+            let { biz_name, text_content } = handleTextContent(result.html);
+
+            let datetime = result.comm_msg_info && result.comm_msg_info.datetime;
+            let datePublished = datetime ? new Date(datetime*1000): new Date();
+
+            let id = [result.biz, result.mid, result.idx].join('_');
+
+            let tags = utils.extractTags(text_content);
+
             return {
-                id: result.id,
+                id: id,
                 title: result.title,
+                biz_name: biz_name,
                 coverImg: {url: result.cover || findImgFromHtml(result.html)},
                 feed: feed,
-                originUrl: result.url,
+                originUrl: result.content_url,
                 type: type,
-                dateCreated: new Date(),
-                lastUpdated: new Date(),
-                datePublished: result.datetime ? new Date(result.datetime*1000) : result.date ? new Date(result.date) : new Date(),
+                dateImported: new Date(),
+                datePublished: datePublished,
                 tags: tags,
                 isDel: 0,
-                desc: result.digest || (result.text_content && result.text_content.substring(0, 30)),
+                desc: result.digest || (text_content && text_content.substring(0, 30)),
 
                 html_content: handleHtml(result.html),
                 from: 'imported'
@@ -64,6 +74,16 @@ function convert2Project(type) {
             return null;
         }
     };
+
+    function handleTextContent(html) {
+        if (!html) return {};
+        let $ = cheerio.load(html);
+
+        let text_content = $('.rich_media_content').text();
+        let biz_name = $('.profile_nickname').text();
+
+        return { biz_name: biz_name, text_content: text_content }
+    }
 
     function handleHtml(html) {
         if (!html) return '';

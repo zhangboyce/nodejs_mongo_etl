@@ -8,10 +8,11 @@ let Constant = require('../execute/Constant');
 
 module.exports = ExportWatchList;
 
-function ExportWatchList(mongoConfig, criteria, fields) {
+function ExportWatchList(mongoConfig, criteria, fields, type) {
     this.mongoConfig = mongoConfig || {};
     this.criteria = criteria || {};
     this.fields = fields || {};
+    this.type = type;
 }
 
 ExportWatchList.watchListMongoConfig = function(exportCollection, exportDb) {
@@ -33,7 +34,7 @@ ExportWatchList.exportWatchList = function(options, mongoConfig, convertorFtn) {
     let criteria = utils.criteria(hours);
     let fields = {'importio': 0};
 
-    let exportWatchList = new ExportWatchList(mongoConfig, criteria, fields);
+    let exportWatchList = new ExportWatchList(mongoConfig, criteria, fields, type);
     exportWatchList.execute(convertorFtn(type));
 };
 
@@ -58,7 +59,7 @@ ExportWatchList.prototype.execute = function(callback) {
         let exportDb = yield this._getExportDbPromise();
         let cursor = exportDb.collection(this.mongoConfig.exportCollection).find(this.criteria, this.fields);
         let results = yield cursor.toArray();
-        console.log(`query ${results.length} watch-lists, criteria: ${JSON.stringify(this.criteria)}`);
+        console.log(`query ${results.length} ${ this.type }, criteria: ${JSON.stringify(this.criteria)}`);
 
         return results;
     }

@@ -2,6 +2,7 @@
 
 let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
+let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
     let mongoConfig = ExportWatchList.watchListMongoConfig('twitter_watchlist');
@@ -23,8 +24,7 @@ function convertWatchList2FeedSource(type) {
             originId: originId,
             iconUrl: result.profile_image_url,
             velocity: 0,
-            dateCreated: new Date(),
-            lastUpdated: new Date(),
+            dateImported: new Date(),
             desc: result.description,
             from: 'imported'
         };
@@ -36,6 +36,9 @@ function convert2Project(type) {
     return (result, feedSources) => {
         let feed = feedSources[result.user.id].toHexString();
         if (feed) {
+
+            let tags = utils.extractTags(result.text);
+
             return {
                 id: result.id.toString(),
                 title: result.name,
@@ -43,12 +46,11 @@ function convert2Project(type) {
                 feed: feed,
                 originUrl: '',
                 type: type,
-                dateCreated: new Date(),
-                lastUpdated: new Date(),
+                dateImported: new Date(),
                 datePublished: new Date(),
                 views: 0,
                 likes: 0,
-                tags: [],
+                tags: tags,
                 isDel: 0,
                 desc: result.text,
                 from: 'imported'

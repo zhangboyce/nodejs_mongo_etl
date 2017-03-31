@@ -8,6 +8,11 @@ let Context = require('./src/common/Context');
 let ConnectMongo = require('./src/common/ConnectMongo');
 let config = require('config');
 
+let nodejieba = require('nodejieba');
+nodejieba.load({
+    userDict: './dict/mydict.txt'
+});
+
 let argv = require('yargs')
     .option('t', arg_option.type)
     .option('d', arg_option.data)
@@ -36,7 +41,6 @@ echo(`run --options ${JSON.stringify(options)} --import ${_import} --cron ${_cro
 let executor = new Executor(options);
 let run;
 if (_import === Constant.IMPORT_MONGO) {
-    Context.set(Constant.MONGO_EXPORT_CONTENTPOOL, ConnectMongo(config.get(Constant.MONGO_EXPORT_CONTENTPOOL)));
     Context.set(Constant.MONGO_EXPORT_RAW, ConnectMongo(config.get(Constant.MONGO_EXPORT_RAW)));
     Context.set(Constant.MONGO_IMPORT, ConnectMongo(config.get(Constant.MONGO_IMPORT)));
     run = executor.import2Mongo;

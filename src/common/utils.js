@@ -2,6 +2,17 @@
 
 let ObjectID = require('mongodb').ObjectID;
 let _ = require('lodash');
+let nodejieba = require('nodejieba');
+
+exports.extractTags = text => {
+    let tags = [];
+    if (text) {
+        let result = nodejieba.extract(text, 10);
+        tags = _.map(result, r => r.word);
+    }
+    return tags;
+};
+
 
 let merge = (obj1, obj2) => {
     let obj3 = {};
@@ -53,4 +64,4 @@ exports.mergeCriteria = (criteria, objectId) => {
     let _id = merge(criteria._id || {}, {$gt: _objectId});
     let condition = merge(criteria, {_id:_id});
     return condition;
-}
+};

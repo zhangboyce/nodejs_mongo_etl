@@ -2,6 +2,7 @@
 
 let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
+let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
     let mongoConfig = ExportWatchList.watchListMongoConfig('instagram_watchlist');
@@ -23,8 +24,7 @@ function convertWatchList2FeedSource(type) {
             originId: originId,
             iconUrl: '',
             velocity: 0,
-            dateCreated: new Date(),
-            lastUpdated: new Date(),
+            dateImported: new Date(),
             desc: result.biography,
             from: 'imported'
         };
@@ -37,6 +37,8 @@ function convert2Project(type) {
         let feedSource = feedSources[(result.owner && result.owner.id) || ""];
         let feed = (feedSource && feedSource.toHexString()) || '';
         if (feed) {
+
+            let tags = utils.extractTags(result.caption);
             return {
                 id: result.id,
                 title: '',
@@ -44,10 +46,9 @@ function convert2Project(type) {
                 feed: feed,
                 originUrl: '',
                 type: type,
-                dateCreated: new Date(),
-                lastUpdated: new Date(),
+                dateImported: new Date(),
                 datePublished: new Date(),
-                tags: [],
+                tags: tags,
                 isDel: 0,
                 desc: result.caption,
 

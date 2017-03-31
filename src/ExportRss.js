@@ -5,6 +5,7 @@ let cheerio = require('cheerio');
 let ExportWatchList = require('./common/ExportWatchList');
 let ExportProject = require('./common/ExportProject');
 let Constant = require('./execute/Constant');
+let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
     //let mongoConfig = Export.watchListMongoConfig('rss_watchlist');
@@ -12,7 +13,7 @@ exports.exportWatchList = function(options) {
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('rss', Constant.MONGO_EXPORT_CONTENTPOOL);
+    let mongoConfig = ExportProject.projectMongoConfig('rss');
     ExportProject.exportProjects(options, mongoConfig, convert2Project)
 };
 
@@ -24,11 +25,14 @@ function convertWatchList2FeedSource(type) {
 
 function convert2Project(type) {
     return (result, feedSources) => {
-        let keywords = result.bosonnlp && result.bosonnlp.keywords;
-        let tags = _.slice(_.map(keywords, keyword => {return keyword[1]}), 0, 10);
-        let feed = feedSources[result.feed] && feedSources[result.feed].toHexString();
+        if (!result) return null;
 
+        let feed = feedSources[result.feed] && feedSources[result.feed].toHexString();
         if (feed) {
+
+            let text_content = handleText(result.html_content);
+            let tags = utils.extractTags(text_content);
+
             return {
                 id: result.id,
                 title: result.title,
@@ -36,12 +40,11 @@ function convert2Project(type) {
                 feed: feed,
                 originUrl: result.url,
                 type: type,
-                dateCreated: new Date(),
-                lastUpdated: new Date(),
+                dateImported: new Date(),
                 datePublished: result.published?new Date(result.published):new Date(),
                 tags: tags,
                 isDel: 0,
-                desc: result.text_content && result.text_content.substring(0, 30),
+                desc: text_content && text_content.substring(0, 30),
 
                 html_content: handleHtml(result.html_content),
                 from: 'imported'
@@ -50,6 +53,13 @@ function convert2Project(type) {
             return null;
         }
     };
+
+    function handleText(html) {
+        if (!html)return '';
+
+        let $ = cheerio.load(html);
+        return $('body').text();
+    }
 
     function handleHtml(html) {
         if (!html)return '';
