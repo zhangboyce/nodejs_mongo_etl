@@ -70,7 +70,7 @@ ExportWatchList.prototype.execute = function(callback) {
         _.forEach(results, result => {
             let data = callback(result);
             batch.find({originId: data.originId, type: data.type}).upsert().updateOne(data);
-            console.log('Upsert a feedSources: %s', JSON.stringify(data));
+            console.log('Upsert a feedSources: ' + JSON.stringify(data));
         });
 
         let result = yield batch.execute();
