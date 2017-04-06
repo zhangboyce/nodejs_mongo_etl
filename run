@@ -13,6 +13,13 @@ nodejieba.load({
     userDict: './dict/mydict.txt'
 });
 
+let f = number => (number>9?'':'0') + number ;
+let formatDate = date => { return `${ date.getFullYear() }-${ f(date.getMonth() + 1) }-${ f(date.getDate()) } ${ f(date.getHours()) }:${ f(date.getMinutes()) }:${ f(date.getSeconds()) }` };
+let log = console.log;
+console.log = content => {
+    log(`[${ formatDate(new Date()) }] ${ content }` );
+};
+
 let argv = require('yargs')
     .option('t', arg_option.type)
     .option('d', arg_option.data)

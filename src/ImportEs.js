@@ -96,7 +96,6 @@ function importProject (options) {
         if (elasticsearch.batchSize() != 0)
             yield elasticsearch.execute();
 
-        db.close();
         elasticsearch.close();
 
     }.bind(this)).catch(err => {
@@ -125,8 +124,7 @@ function importFeedSource(options) {
         let feedsourceCursor = db.collection('feedsources').find(criteria);
         let feedsources = yield feedsourceCursor.toArray();
 
-        console.log(`Query ${type} ${feedsources.length} feed-sources. condition: ${JSON.stringify(criteria)}`);
-        db.close();
+        console.log(`Query ${type} ${feedsources.length} feedSources. condition: ${JSON.stringify(criteria)}`);
 
         for (let i = 0; i < feedsources.length; i++) {
             let feedsource = feedsources[i];
@@ -142,10 +140,12 @@ function importFeedSource(options) {
             };
 
             elasticsearch.batch(document);
-            console.log(`Add a feed-source document to batch: ${JSON.stringify(document)}`);
+            console.log(`Add a ${ type } feedSource document to batch: ${JSON.stringify(document)}`);
         }
 
         let result = yield elasticsearch.execute();
+        console.log(`Add ${ feedsources.length } ${ type } feedSources to es successfully.`);
+
         elasticsearch.close();
 
     }.bind(this)).catch(err => {

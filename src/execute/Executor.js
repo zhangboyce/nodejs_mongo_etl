@@ -24,57 +24,81 @@ function Executor(options) {
 
 Executor.prototype.import2Mongo = function() {
 
-    let handleTypeMap = (data, typeMap) => {
-        let _executor = this.options.type?typeMap.get(this.options.type):typeMap;
+    try {
+        let handleTypeMap = (data, typeMap) => {
+            let _executor = this.options.type?typeMap.get(this.options.type):typeMap;
 
-        if (_executor instanceof Function) {
-            _executor.call(this, _.assign({}, this.options));
-            console.log(`> Execute ${this.options.type}, ${data} ... ...`);
-        }
-        if (_executor instanceof Map) {
-            for (let [key, value] of _executor) {
-                value.call(this, _.assign({}, this.options, {type: key}));
-                console.log(`> Execute ${key}, ${data} ... ...`);
+            if (_executor instanceof Function) {
+                try {
+                    _executor.call(this, _.assign({}, this.options));
+                    console.log(`> Execute ${this.options.type}, ${data} ... ...`);
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+            if (_executor instanceof Map) {
+                for (let [key, value] of _executor) {
+                    try {
+                        value.call(this, _.assign({}, this.options, {type: key}));
+                        console.log(`> Execute ${key}, ${data} ... ...`);
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
+            }
+        };
+
+        if (this.options.data) {
+            handleTypeMap(this.options.data, this.executors.get(this.options.data));
+        } else {
+            for (let [key, value] of this.executors) {
+                handleTypeMap(key, value);
             }
         }
-    };
-
-    if (this.options.data) {
-        handleTypeMap(this.options.data, this.executors.get(this.options.data));
-    } else {
-        for (let [key, value] of this.executors) {
-            handleTypeMap(key, value);
-        }
+    } catch (e) {
+        console.log(e);
     }
 };
 
 Executor.prototype.import2ES = function() {
-    let ftn = (_options) => {
-        if (!this.options.data) {
-            etl.ImportFeedSource2ES(_options);
-            etl.ImportProject2ES(_options);
+    try {
+        let ftn = (_options) => {
+            try {
+                if (!this.options.data) {
+                    etl.ImportFeedSource2ES(_options);
+                    etl.ImportProject2ES(_options);
+                }
+                if (this.options.data === feedsource) etl.ImportFeedSource2ES(_options);
+                if (this.options.data === project) etl.ImportProject2ES(_options);
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        if (!this.options.type) {
+            [feed, wechat, instagram, facebook, twitter, website].forEach(type => {
+                let _options = _.assign({}, this.options, {type: type});
+                ftn(_options);
+            });
+        } else {
+            ftn(this.options);
         }
-        if (this.options.data === feedsource) etl.ImportFeedSource2ES(_options);
-        if (this.options.data === project) etl.ImportProject2ES(_options);
-    };
-    
-    if (!this.options.type) {
-        [feed, wechat, instagram, facebook, twitter, website].forEach(type => {
-            let _options = _.assign({}, this.options, {type: type});
-            ftn(_options);
-        });
-    } else {
-        ftn(this.options);
+    } catch (e) {
+        console.log(e);
     }
 };
 
 Executor.prototype.importRaL = function() {
 
-    if (this.options.type != Constant.TYPE_WECHAT) {
-        console.log('Cannot import read and like num from type expect wechat. type: ' + this.options.type );
-        return;
+    try {
+        if (this.options.type != Constant.TYPE_WECHAT) {
+            console.log('Cannot import read and like num from type expect wechat. type: ' + this.options.type );
+            return;
+        }
+        etl.ImportWeixinReadAndLikeNum(this.options);
+    } catch (e) {
+        console.log(e)
     }
-    etl.ImportWeixinReadAndLikeNum(this.options);
 };
 
 Executor.prototype.init = () => {
@@ -100,4 +124,4 @@ Executor.prototype.init = () => {
     executors.set(project, projectMap);
 
     return executors;
-}
+};

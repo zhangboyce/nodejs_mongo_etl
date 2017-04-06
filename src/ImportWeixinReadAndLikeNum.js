@@ -57,14 +57,17 @@ module.exports =  options => {
 
             for (let project of projects) {
                 let read_like_num = yield hget(client, "article_read_like",  project.id);
-                console.log(`project ${ project.id },  read_like_num: ${ read_like_num }`);
+
+                //console.log(`project ${ project.id },  read_like_num: ${ read_like_num }`);
+
                 if (read_like_num) {
                     let read_like_num_obj = JSON.parse(read_like_num);
                     let like_num = read_like_num_obj.like_num;
                     let read_num = read_like_num_obj.read_num;
 
                     db.collection(collection).updateOne({ id: project.id }, { $set: { like_num: like_num, read_num: read_num } });
-                    console.log(`> Update ${ project.id },  read_like_num: ${ read_like_num }`);
+
+                    //console.log(`> Update ${ project.id },  read_like_num: ${ read_like_num }`);
                 }
             }
         }
