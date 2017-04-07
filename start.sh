@@ -5,7 +5,7 @@ mm=$(date +%m)
 dd=$(date +%d)
 
 path="log/$yyyy-$mm-$dd"
-sudo mkdir -p $path
+mkdir -p $path
 
 run -d feedsource -h 48 -i mongo -r 1000 -c '0 1 * * *' > "$path/mongo_feedsource.txt" &
 run -d project -h 48 -i mongo -r 1000 -c '0 2 * * *' > "$path/mongo_project.txt" &
