@@ -1,9 +1,16 @@
 #!/bin/bash
 
-run -d feedsource -h 48 -i mongo -r 1000 -c '0 1 * * *' > ~/log/momgo_feedsource.txt &
-run -d project -h 48 -i mongo -r 1000 -c '0 2 * * *' > ~/log/momgo_project.txt &
+yyyy=$(date +%Y)
+mm=$(date +%m)
+dd=$(date +%d)
 
-run -d feedsource -h 48 -i es -r 1000 -c '0 6 * * *' > ~/log/es_feedsource.txt &
-run -d project -h 48 -i es -r 1000 -c '0 7 * * *' > ~/log/es_project.txt &
+path="log/$yyyy-$mm-$dd"
+sudo mkdir -p $path
 
-run -d project -h 48 -i ral -t wechat -r 1000 -c '0 9 * * *' > ~/log/redis_read_like.txt &
+run -d feedsource -h 48 -i mongo -r 1000 -c '0 1 * * *' > "$path/mongo_feedsource.txt" &
+run -d project -h 48 -i mongo -r 1000 -c '0 2 * * *' > "$path/mongo_project.txt" &
+
+run -d feedsource -h 48 -i es -r 1000 -c '0 6 * * *' > "$path/es_feedsource.txt" &
+run -d project -h 48 -i es -r 1000 -c '0 7 * * *' > "$path/es_project.txt" &
+
+run -d project -h 48 -i ral -t wechat -r 1000 -c '0 9 * * *' > "$path/redis_read_like.txt" &
