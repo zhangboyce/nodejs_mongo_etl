@@ -3,7 +3,8 @@
 let _ = require('lodash');
 let utils = require('./utils');
 let co = require('co');
-let Context = require('./Context');
+let config = require('config');
+let ConnectMongo = require('./ConnectMongo');
 let Constant = require('../execute/Constant');
 
 module.exports = ExportProject;
@@ -14,20 +15,12 @@ function ExportProject(mongoConfig, criteria, fields, type, range) {
     this.fields = fields || {};
     this.type = type;
     this.range = range;
-
-    this.feedsources = [];
-    this.importDb = null;
 }
 
 ExportProject.projectMongoConfig = function(exportCollection) {
     return {
-        exportDb: Constant.MONGO_EXPORT_RAW,
         exportCollection: exportCollection,
-
-        importDb: Constant.MONGO_IMPORT,
         importCollection: 'projects',
-
-        feedSourcesDb: Constant.MONGO_IMPORT,
         feedSourcesCollection: 'feedsources'
     };
 };
@@ -50,32 +43,38 @@ ExportProject.exportProjects = function(options, mongoConfig, convertorFtn) {
  */
 ExportProject.prototype.execute = function(callback) {
 
-    co(function* () {
-        if (!callback || typeof callback != 'function') {
-            console.log('.execute() only accept a function but was passed: ' + {}.toString.call(callback));
-            return null;
-        }
+    if (!callback || typeof callback != 'function') {
+        console.log('.execute() only accept a function but was passed: ' + {}.toString.call(callback));
+        return null;
+    }
 
+    co(function* () {
         let count = 0;
         let start = Date.now();
 
-        let feedSources = yield queryFeedSources.call(this);
-        if (feedSources) {
+        try {
             this.importDb = yield this._getImportDbPromise();
-            this.feedsources = feedSources;
+            this.exportDb = yield this._getExportDbPromise();
 
-            count = yield exportProjects.call(this);
+            let feedSources = yield queryFeedSources.call(this);
+            if (feedSources) {
+                this.feedsources = feedSources;
+                count = yield exportProjects.call(this);
+            }
+            console.log(`> Export ${ count } ${ this.type } projects completed, and take: ${ (Date.now() - start)/1000 } s.`);
+
+        } catch(e) {
+            console.log(e);
         }
-        console.log(`> Export ${ count } ${ this.type } projects completed, and take: ${ (Date.now() - start)/1000 } s.`);
 
-    }.bind(this)).catch(err => {
-        console.log(err);
-    });
+        this.importDb.close();
+        this.exportDb.close();
+
+    }.bind(this));
 
     function* queryFeedSources() {
         let collection = this.mongoConfig.feedSourcesCollection;
-        let feedSourcesDb = yield this._getFeedSourcesDbPromise();
-        let results = feedSourcesDb.collection(collection).find({type: this.type});
+        let results = this.importDb.collection(collection).find({type: this.type});
 
         let items = yield results.toArray();
         let feedSources = {};
@@ -92,11 +91,9 @@ ExportProject.prototype.execute = function(callback) {
     }
 
     function* exportProjects() {
-        let exportDb = yield this._getExportDbPromise();
-
         let start = Date.now();
         let collection = this.mongoConfig.exportCollection;
-        let count = yield exportDb.collection(collection).count(this.criteria);
+        let count = yield this.exportDb.collection(collection).count(this.criteria);
 
         console.log(`Count ${count} ${this.type} projects, and take: ${ (Date.now() - start)/1000 } s.`);
 
@@ -105,17 +102,17 @@ ExportProject.prototype.execute = function(callback) {
             let condition = utils.mergeCriteria(this.criteria);
             let step = Math.floor(count / this.range) + 1;
             for (let i = 0; i < step; i++) {
-                condition = yield _step.apply(this, [exportDb, condition, count, i]);
+                condition = yield _step.apply(this, [condition, count, i]);
             }
         }
         return count;
     }
 
-    function* _step(exportDb, condition, count, i) {
+    function* _step(condition, count, i) {
 
         let start = Date.now();
         let collection = this.mongoConfig.exportCollection;
-        let cursor = exportDb.collection(collection).find(condition, this.fields).sort({_id: 1}).limit(this.range);
+        let cursor = this.exportDb.collection(collection).find(condition, this.fields).sort({_id: 1}).limit(this.range);
         let _results = yield cursor.toArray();
         if (_results.length > 0) {
             // for each every item, execute callback function to handle result.
@@ -186,14 +183,10 @@ ExportProject.prototype.execute = function(callback) {
     }
 };
 
-ExportProject.prototype._getFeedSourcesDbPromise = function() {
-    return Context.get(this.mongoConfig.feedSourcesDb);
-};
-
 ExportProject.prototype._getExportDbPromise = function() {
-    return Context.get(this.mongoConfig.exportDb);
+    return ConnectMongo(config.get(Constant.MONGO_EXPORT));
 };
 
 ExportProject.prototype._getImportDbPromise = function() {
-    return Context.get(this.mongoConfig.importDb);
+    return ConnectMongo(config.get(Constant.MONGO_IMPORT));
 };

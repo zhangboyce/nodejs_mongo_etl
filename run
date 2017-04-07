@@ -47,21 +47,10 @@ echo(`run --options ${JSON.stringify(options)} --import ${_import} --cron ${_cro
 
 let executor = new Executor(options);
 let run;
-if (_import === Constant.IMPORT_MONGO) {
-    Context.set(Constant.MONGO_EXPORT_RAW, ConnectMongo(config.get(Constant.MONGO_EXPORT_RAW)));
-    Context.set(Constant.MONGO_IMPORT, ConnectMongo(config.get(Constant.MONGO_IMPORT)));
-    run = executor.import2Mongo;
-}
-if (_import === Constant.IMPORT_ES) {
-    Context.set(Constant.ES_EXPORT, ConnectMongo(config.get(Constant.ES_EXPORT)));
-    Context.set(Constant.ES_IMPORT, config.get(Constant.ES_IMPORT));
-    run = executor.import2ES;
-}
-if (_import === Constant.IMPORT_RAL) {
-    Context.set(Constant.REDIS_EXPORT, ConnectMongo(config.get(Constant.REDIS_EXPORT)));
-    Context.set(Constant.REDIS_IMPORT, config.get(Constant.REDIS_IMPORT));
-    run = executor.importRaL;
-}
+
+if (_import === Constant.IMPORT_MONGO) run = executor.import2Mongo;
+if (_import === Constant.IMPORT_ES) run = executor.import2ES;
+if (_import === Constant.IMPORT_RAL) run = executor.importRaL;
 
 if (_cron) {
     cron.schedule(_cron, ()=>{

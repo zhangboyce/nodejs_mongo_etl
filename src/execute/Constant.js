@@ -14,7 +14,7 @@ exports.IMPORT_MONGO = 'mongo';
 exports.IMPORT_ES = 'es';
 exports.IMPORT_RAL = 'ral';
 
-exports.MONGO_EXPORT_RAW = 'mongo.export.raw';
+exports.MONGO_EXPORT = 'mongo.export';
 exports.MONGO_IMPORT = 'mongo.import';
 exports.REDIS_EXPORT = 'redis.export';
 exports.REDIS_IMPORT = 'redis.import';

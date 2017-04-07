@@ -23,7 +23,6 @@ function Executor(options) {
 }
 
 Executor.prototype.import2Mongo = function() {
-
     try {
         let handleTypeMap = (data, typeMap) => {
             let _executor = this.options.type?typeMap.get(this.options.type):typeMap;

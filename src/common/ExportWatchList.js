@@ -3,7 +3,8 @@
 let _ = require('lodash');
 let co = require('co');
 let utils = require('./utils');
-let Context = require('./Context');
+let config = require('config');
+let ConnectMongo = require('./ConnectMongo');
 let Constant = require('../execute/Constant');
 
 module.exports = ExportWatchList;
@@ -15,12 +16,9 @@ function ExportWatchList(mongoConfig, criteria, fields, type) {
     this.type = type;
 }
 
-ExportWatchList.watchListMongoConfig = function(exportCollection, exportDb) {
+ExportWatchList.watchListMongoConfig = function(exportCollection) {
     return {
-        exportDb: exportDb || Constant.MONGO_EXPORT_RAW,
         exportCollection: exportCollection,
-
-        importDb: Constant.MONGO_IMPORT,
         importCollection: 'feedsources'
     };
 
@@ -46,18 +44,28 @@ ExportWatchList.prototype.execute = function(callback) {
     }
 
     co(function* () {
-        let results = yield queryWatchList.call(this);
-        if (results.length > 0) {
-            yield insertWatchList.call(this, results);
+        try {
+            let start = Date.now();
+            this.importDb = yield this._getImportDbPromise();
+            this.exportDb = yield this._getExportDbPromise();
+
+            let results = yield queryWatchList.call(this);
+            if (results.length > 0) {
+                yield insertWatchList.call(this, results);
+            }
+
+            console.log(`> Export ${ this.type } feedSources completed, and take: ${ (Date.now() - start)/1000 } s.`);
+        } catch (e) {
+            console.log(e);
         }
 
-    }.bind(this)).catch(err => {
-        console.log(err);
-    });
+        this.importDb.close();
+        this.exportDb.close();
+
+    }.bind(this));
 
     function* queryWatchList() {
-        let exportDb = yield this._getExportDbPromise();
-        let cursor = exportDb.collection(this.mongoConfig.exportCollection).find(this.criteria, this.fields);
+        let cursor = this.exportDb.collection(this.mongoConfig.exportCollection).find(this.criteria, this.fields);
         let results = yield cursor.toArray();
         console.log(`query ${results.length} ${ this.type }, criteria: ${JSON.stringify(this.criteria)}`);
 
@@ -65,8 +73,7 @@ ExportWatchList.prototype.execute = function(callback) {
     }
 
     function* insertWatchList(results) {
-        let importDb = yield this._getImportDbPromise();
-        let batch = importDb.collection(this.mongoConfig.importCollection).initializeUnorderedBulkOp({useLegacyOps: true});
+        let batch = this.importDb.collection(this.mongoConfig.importCollection).initializeUnorderedBulkOp({useLegacyOps: true});
         _.forEach(results, result => {
             let data = callback(result);
             batch.find({originId: data.originId, type: data.type}).upsert().updateOne(data);
@@ -79,9 +86,9 @@ ExportWatchList.prototype.execute = function(callback) {
 };
 
 ExportWatchList.prototype._getExportDbPromise = function() {
-    return Context.get(this.mongoConfig.exportDb);
+    return ConnectMongo(config.get(Constant.MONGO_EXPORT));
 };
 
 ExportWatchList.prototype._getImportDbPromise = function() {
-    return Context.get(this.mongoConfig.importDb);
+    return ConnectMongo(config.get(Constant.MONGO_IMPORT));
 };

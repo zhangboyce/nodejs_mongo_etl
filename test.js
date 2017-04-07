@@ -1,31 +1,31 @@
 'use strict';
 
-//let mongoClient = require('mongodb').MongoClient;
-////let url = 'mongodb://raw:raw@dds-bp17568c88318c341.mongodb.rds.aliyuncs.com:3717,dds-bp17568c88318c342.mongodb.rds.aliyuncs.com:3717/raw?replicaSet=mgset-1471849';
+let mongoClient = require('mongodb').MongoClient;
+let url = 'mongodb://raw:raw@dds-bp17568c88318c341.mongodb.rds.aliyuncs.com:3717,dds-bp17568c88318c342.mongodb.rds.aliyuncs.com:3717/raw?replicaSet=mgset-1471849';
 //let url = 'mongodb://192.168.100.83:27017/test';
 //let cheerio = require('cheerio');
 //let _ = require('lodash');
 //
 //let nodejieba = require('nodejieba');
 //
-////mongoClient.connect(url).then(db => {
-////    console.log("Connect mongo db: " + url);
-////
-////    let collection = db.collection('a');
-////    let bulk = collection.initializeUnorderedBulkOp({useLegacyOps: true});
-////
-////    bulk.find({ b: '1' }).upsert().updateOne({ $set:{ a: '1', b: '2' } });
-////
-////    collection.update({ b: '1' }, { $set:{ a: '2', b: '2', c: '2' } }, { upsert: true }, (err, result) => {
-////        console.log(JSON.stringify(result));
-////    });
-////
-////    //bulk.execute();
-////    db.close();
-////
-////}).catch(err => {
-////    console.log("Connect mongo db: " + url + " error." + err);
-////});
+
+//let start = Date.now();
+//mongoClient.connect(url).then(db => {
+//    db.close();
+//    console.log(`Connect mongo db: ${ url }, and take: ${ (Date.now() - start)/1000 } s.`);
+//}).catch(err => {
+//    console.log("Connect mongo db: " + url + " error." + err);
+//});
+//
+//start = Date.now();
+//mongoClient.connect(url).then(db => {
+//    db.close();
+//    console.log(`Connect mongo db: ${ url }, and take: ${ (Date.now() - start)/1000 } s.`);
+//}).catch(err => {
+//    console.log("Connect mongo db: " + url + " error." + err);
+//});
+
+
 //
 //
 //function handleTextContent(html) {
@@ -74,32 +74,49 @@
 //console.log(new Date());
 //
 
-function xxoo() {
-    throw new Error('xxoo');
-}
+//function xxoo() {
+//    throw new Error('xxoo');
+//}
+//
+//function oo() {
+//    console.log('oo');
+//}
+//
+//function xx() {
+//    try {
+//        xxoo();
+//    } catch (e) {
+//        console.log(e);
+//    }
+//    oo();
+//}
+//
+//try {
+//    xx();
+//} catch(e) {
+//    console.log(e);
+//}
+//
+//
+//let now = new Date();
+//let f = number => (number>9?'':'0') + number ;
+//let formatDate = date =>  `${ f(date.getHours()) }`;
+//console.log(formatDate(now));
 
-function oo() {
-    console.log('oo');
-}
 
-function xx() {
-    try {
-        xxoo();
-    } catch (e) {
-        console.log(e);
+let redis = require('redis');
+let client = redis.createClient({
+    "host":"8f2f23a8ab9a47ba.m.cnhza.kvstore.aliyuncs.com",
+    "port":6379,
+    "password":"e3aEqW8834Sra4i",
+    "db":67
+});
+
+
+client.hmget('article_read_like', ['MzA3MTYyMTExNA==_2655640819_4','s', 'MzA3Njg2ODcxNw==_2671749791_2'] , (err, results) => {
+    for (let result of results) {
+        console.log(result);
     }
-    oo();
-}
+});
 
-try {
-    xx();
-} catch(e) {
-    console.log(e);
-}
-
-
-let now = new Date();
-let f = number => (number>9?'':'0') + number ;
-let formatDate = date =>  `${ f(date.getHours()) }`;
-console.log(formatDate(now));
-
+client.quit();
