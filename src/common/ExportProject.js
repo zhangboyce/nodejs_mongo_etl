@@ -155,7 +155,7 @@ ExportProject.prototype.execute = function(callback) {
 
         if (importBatch.length != 0) {
             let result = yield importBatch.execute();
-            console.log(`Inserted ${ importBatch.length } ${ this.type } projects.`);
+            //console.log(`Inserted ${ importBatch.length } ${ this.type } projects.`);
         }
     }
 
@@ -178,7 +178,7 @@ ExportProject.prototype.execute = function(callback) {
 
         if (projectTextBatch.length != 0) {
             let result = yield projectTextBatch.execute();
-            console.log(`Inserted ${ projectTextBatch.length } ${ this.type } projecttexts.`);
+            //console.log(`Inserted ${ projectTextBatch.length } ${ this.type } projecttexts.`);
         }
     }
 };
