@@ -150,7 +150,7 @@ ExportProject.prototype.execute = function(callback) {
             delete _item.html_content;
             importBatch.find({id: item.id}).upsert().updateOne({ $set: _item });
 
-            console.log(`Add a ${ this.type } project: ${ JSON.stringify(_item, null, 0) }.`);
+            //console.log(`Add a ${ this.type } project: ${ JSON.stringify(_item, null, 0) }.`);
         });
 
         if (importBatch.length != 0) {
@@ -173,7 +173,7 @@ ExportProject.prototype.execute = function(callback) {
             let project_text = { _id: _id, text: item.html_content };
             projectTextBatch.insert(project_text);
 
-            console.log(`Add a ${ this.type } projecttext: ${ JSON.stringify(project_text, null, 0) }.`);
+            //console.log(`Add a ${ this.type } projecttext: ${ JSON.stringify(project_text, null, 0) }.`);
         }
 
         if (projectTextBatch.length != 0) {
