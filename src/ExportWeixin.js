@@ -11,13 +11,11 @@ let Constant = require('./execute/Constant');
 let Context = require('./common/Context');
 
 exports.exportWatchList = function(options) {
-    let mongoConfig = ExportWatchList.watchListMongoConfig('weixin_watchlist');
-    ExportWatchList.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
+    ExportWatchList.exportWatchList(options, 'weixin_watchlist', convertWatchList2FeedSource)
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('weixin_article_list');
-    ExportProject.exportProjects(options, mongoConfig, convert2Project)
+    ExportProject.exportProjects(options, 'weixin_article_list', convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {
@@ -54,6 +52,7 @@ function convert2Project(type) {
             let tags = utils.extractTags(text_content);
 
             return {
+                _id: result._id,
                 id: id,
                 title: result.title,
                 biz_name: biz_name,

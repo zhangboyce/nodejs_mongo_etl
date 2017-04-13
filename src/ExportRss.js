@@ -13,8 +13,7 @@ exports.exportWatchList = function(options) {
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('rss');
-    ExportProject.exportProjects(options, mongoConfig, convert2Project)
+    ExportProject.exportProjects(options, 'rss', convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {
@@ -34,6 +33,7 @@ function convert2Project(type) {
             let tags = utils.extractTags(text_content);
 
             return {
+                _id: result._id,
                 id: result.id,
                 title: result.title,
                 coverImg: {url: findImgFromHtml(result.html)},

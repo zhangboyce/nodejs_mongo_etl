@@ -5,13 +5,11 @@ let ExportProject = require('./common/ExportProject');
 let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
-    let mongoConfig = ExportWatchList.watchListMongoConfig('twitter_watchlist');
-    ExportWatchList.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
+    ExportWatchList.exportWatchList(options, 'twitter_watchlist', convertWatchList2FeedSource)
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('twitter');
-    ExportProject.exportProjects(options, mongoConfig, convert2Project)
+    ExportProject.exportProjects(options, 'twitter', convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {
@@ -40,6 +38,7 @@ function convert2Project(type) {
             let tags = utils.extractTags(result.text);
 
             return {
+                _id: result._id,
                 id: result.id.toString(),
                 title: result.name,
                 coverImg: {url: ''},

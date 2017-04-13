@@ -5,13 +5,11 @@ let ExportProject = require('./common/ExportProject');
 let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
-    let mongoConfig = ExportWatchList.watchListMongoConfig('facebook_watchlist');
-    ExportWatchList.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
+    ExportWatchList.exportWatchList(options, 'facebook_watchlist', convertWatchList2FeedSource)
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('facebook');
-    ExportProject.exportProjects(options, mongoConfig, convert2Project)
+    ExportProject.exportProjects(options, 'facebook', convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {
@@ -41,6 +39,7 @@ function convert2Project(type) {
         if (feed) {
             let tags = utils.extractTags(result.message);
             return {
+                _id: result._id,
                 id: result.id,
                 title: result.name,
                 coverImg: {url: result.picture},

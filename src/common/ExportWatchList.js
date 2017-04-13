@@ -9,22 +9,14 @@ let Constant = require('../execute/Constant');
 
 module.exports = ExportWatchList;
 
-function ExportWatchList(mongoConfig, criteria, fields, type) {
-    this.mongoConfig = mongoConfig || {};
+function ExportWatchList(exportCollection, criteria, fields, type) {
+    this.exportCollection = exportCollection;
     this.criteria = criteria || {};
     this.fields = fields || {};
     this.type = type;
 }
 
-ExportWatchList.watchListMongoConfig = function(exportCollection) {
-    return {
-        exportCollection: exportCollection,
-        importCollection: 'feedsources'
-    };
-
-};
-
-ExportWatchList.exportWatchList = function(options, mongoConfig, convertorFtn) {
+ExportWatchList.exportWatchList = function(options, exportCollection, convertorFtn) {
     let hours = options.hours;
     let range = options.range;
     let type = options.type;
@@ -32,7 +24,7 @@ ExportWatchList.exportWatchList = function(options, mongoConfig, convertorFtn) {
     let criteria = utils.criteria(hours);
     let fields = {'importio': 0};
 
-    let exportWatchList = new ExportWatchList(mongoConfig, criteria, fields, type);
+    let exportWatchList = new ExportWatchList(exportCollection, criteria, fields, type);
     exportWatchList.execute(convertorFtn(type));
 };
 
@@ -65,7 +57,7 @@ ExportWatchList.prototype.execute = function(callback) {
     }.bind(this));
 
     function* queryWatchList() {
-        let cursor = this.exportDb.collection(this.mongoConfig.exportCollection).find(this.criteria, this.fields);
+        let cursor = this.exportDb.collection(this.exportCollection).find(this.criteria, this.fields);
         let results = yield cursor.toArray();
         console.log(`query ${results.length} ${ this.type }, criteria: ${JSON.stringify(this.criteria)}`);
 
@@ -73,15 +65,16 @@ ExportWatchList.prototype.execute = function(callback) {
     }
 
     function* insertWatchList(results) {
-        let batch = this.importDb.collection(this.mongoConfig.importCollection).initializeUnorderedBulkOp({useLegacyOps: true});
+        let batch = this.importDb.collection('feedsources').initializeUnorderedBulkOp({useLegacyOps: true});
         _.forEach(results, result => {
             let data = callback(result);
             batch.find({originId: data.originId, type: data.type}).upsert().updateOne(data);
-            console.log('Upsert a feedSources: ' + JSON.stringify(data));
         });
 
-        let result = yield batch.execute();
-        console.log('Inserted result: ' + JSON.stringify(result));
+        if (batch.length != 0) {
+            let result = yield batch.execute();
+            console.log(`Inserted ${ batch.length } ${ this.type } feedsources.`);
+        }
     }
 };
 

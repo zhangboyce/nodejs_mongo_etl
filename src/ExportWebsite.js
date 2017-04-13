@@ -8,13 +8,11 @@ let Constant = require('./execute/Constant');
 let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
-    let mongoConfig = ExportWatchList.watchListMongoConfig('website_watchlist');
-    ExportWatchList.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
+    ExportWatchList.exportWatchList(options, 'website_watchlist', convertWatchList2FeedSource)
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('website');
-    ExportProject.exportProjects(options, mongoConfig, convert2Project)
+    ExportProject.exportProjects(options, 'website', convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {
@@ -46,6 +44,7 @@ function convert2Project(type) {
             let tags = utils.extractTags(text_content);
 
             return {
+                _id: result._id,
                 id: result.id,
                 title: result.title,
                 coverImg: {url: findImgFromHtml(result.html)},

@@ -5,19 +5,18 @@ let ExportProject = require('./common/ExportProject');
 let utils = require('./common/utils');
 
 exports.exportWatchList = function(options) {
-    let mongoConfig = ExportWatchList.watchListMongoConfig('instagram_watchlist');
-    ExportWatchList.exportWatchList(options, mongoConfig, convertWatchList2FeedSource)
+    ExportWatchList.exportWatchList(options, 'instagram_watchlist', convertWatchList2FeedSource)
 };
 
 exports.exportProjects = function(options) {
-    let mongoConfig = ExportProject.projectMongoConfig('instagram');
-    ExportProject.exportProjects(options, mongoConfig, convert2Project)
+    ExportProject.exportProjects(options, 'instagram', convert2Project)
 };
 
 function convertWatchList2FeedSource(type) {
     return (result) => {
         let originId = type + '/' + result.id;
         let data = {
+            _id: result._id,
             id: result.id,
             name: result.full_name,
             type: type,
