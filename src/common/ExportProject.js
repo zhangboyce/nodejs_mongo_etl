@@ -89,7 +89,7 @@ ExportProject.prototype.execute = function(callback) {
             // init first query condition
             let condition = Object.assign({}, this.criteria);
 
-            let i = 0, exportedCount = 0;
+            let exportedCount = 0;
             if (this.hours == 0) {
                 exportedCount = yield this.importDb.collection('projects').count({type: this.type});
                 console.log(`Had exported ${ exportedCount }, start with the ${ exportedCount }th.`);
@@ -100,20 +100,28 @@ ExportProject.prototype.execute = function(callback) {
                 }
             }
 
-            if (exportedCount != 0) i = exportedCount / this.range;
-            let step = Math.floor(count / this.range) + 1;
-            for (; i < step; i++) {
-                exportedCount = yield _step.apply(this, [condition, count, exportedCount]);
+            let cache = {count: 0};
+            while (true) {
+                start = Date.now();
+
+                let completed = yield step.apply(this, [condition, cache]);
+                if (completed == 0) break;
+
+                console.log(`Export ${this.type} projects (completed=${ exportedCount += completed }, count=${count}), condition: ${JSON.stringify(condition)}, and take: ${ (Date.now() - start)/1000 } s.`);
             }
+
+            while (yield new Promise((rs, rj) => {
+                setTimeout(() => { cache.count == 0? rs(false): rs(true); }, 100)
+            })){}
         }
         return count;
     }
 
-    function* _step(condition, count, completed) {
+    function* step(condition, cache) {
 
-        let start = Date.now();
         let cursor = this.exportDb.collection(this.exportCollection).find(condition).sort({_id: 1}).limit(this.range);
         let _results = yield cursor.toArray();
+
         if (_results.length > 0) {
             // for each every item, execute callback function to handle result.
             let items = [];
@@ -124,22 +132,25 @@ ExportProject.prototype.execute = function(callback) {
                 if (item) items.push(item);
             });
 
-            yield insertProjects.call(this, items);
+            while (yield new Promise((rs, rj) => {
+                setTimeout(() => { cache.count > 6 ? rs(true): rs(false); }, 50);
+            })){}
+
+            cache.count += 2;
+
+            insertProjects.apply(this, [items, cache]);
 
             // update the next query condition, get the last result's _id
             let objectId = _results[_results.length - 1]._id;
             Object.assign(condition, { _id: Object.assign({}, condition._id || {}, { '$gt': objectId }) });
         }
 
-        console.log(`Export ${this.type} projects (completed=${ completed += _results.length }, count=${count}), condition: ${JSON.stringify(condition)}, and take: ${ (Date.now() - start)/1000 } s.`);
-
-        return completed;
+        return _results.length;
     }
 
-    function* insertProjects(items) {
+    function insertProjects(items, cache) {
         let importBatch = this.importDb.collection('projects').initializeUnorderedBulkOp({useLegacyOps: true});
         let projectTextBatch = this.importDb.collection('projecttexts').initializeUnorderedBulkOp({useLegacyOps: true});
-
         _.each(items, item => {
 
             let html_content = item.html_content;
@@ -151,15 +162,30 @@ ExportProject.prototype.execute = function(callback) {
             importBatch.find({ _id: item._id }).upsert().updateOne({ $set: item });
 
         });
-
         if (importBatch.length != 0) {
-            let result = yield importBatch.execute();
-            console.log(`Inserted ${ importBatch.length } ${ this.type } projects.`);
+            importBatch.execute((err, result) => {
+                cache.count -= 1;
+                if(err) {
+                    console.log(err);
+                    return;
+                }
+                console.log(`Inserted ${ importBatch.length } ${ this.type } projects.`);
+            });
+        }else {
+            cache.count -= 1;
         }
 
         if (projectTextBatch.length != 0) {
-            let result = yield projectTextBatch.execute();
-            console.log(`Inserted ${ projectTextBatch.length } ${ this.type } projecttexts.`);
+            projectTextBatch.execute((err, result) => {
+                cache.count -= 1;
+                if(err) {
+                    console.log(err);
+                    return;
+                }
+                console.log(`Inserted ${ projectTextBatch.length } ${ this.type } projecttexts.`);
+            });
+        }else {
+            cache.count -= 1;
         }
     }
 };
