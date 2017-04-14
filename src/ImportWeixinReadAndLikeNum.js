@@ -50,7 +50,7 @@ module.exports =  options => {
             console.log(`Count ${count} ${type} projects.`);
             if (count != 0) {
                 // init first query condition
-                let condition = utils.mergeCriteria(criteria);
+                let condition = Object.assign({}, this.criteria);
                 let step = Math.floor(count / range) + 1;
                 let completed = 0;
 

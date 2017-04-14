@@ -104,19 +104,40 @@ let url = 'mongodb://raw:raw@dds-bp17568c88318c341.mongodb.rds.aliyuncs.com:3717
 //console.log(formatDate(now));
 
 
-let redis = require('redis');
-let client = redis.createClient({
-    "host":"8f2f23a8ab9a47ba.m.cnhza.kvstore.aliyuncs.com",
-    "port":6379,
-    "password":"e3aEqW8834Sra4i",
-    "db":67
+//let redis = require('redis');
+//let client = redis.createClient({
+//    "host":"8f2f23a8ab9a47ba.m.cnhza.kvstore.aliyuncs.com",
+//    "port":6379,
+//    "password":"e3aEqW8834Sra4i",
+//    "db":67
+//});
+//
+//
+//client.hmget('article_read_like', ['MzA3MTYyMTExNA==_2655640819_4','s', 'MzA3Njg2ODcxNw==_2671749791_2'] , (err, results) => {
+//    for (let result of results) {
+//        console.log(result);
+//    }
+//});
+//
+//client.quit();
+
+
+let utils = require('./src/common/utils');
+let _ = require('lodash');
+
+let c = { _id: { '$gt': '0000000000000' } };
+
+console.log(utils.mergeCriteria(c));
+
+console.log(Object.assign({}, c, { _id: Object.assign({}, c._id, { '$gt': '999999999999' }) }));
+
+
+let ConnectMongo = require('./src/common/ConnectMongo');
+let co = require('co');
+co(function *() {
+    let db = yield ConnectMongo('mongodb://192.168.100.83:27017/boom');
+    let result = yield db.collection('projects').find({}, { _id: 1 }).sort({ _id: -1 }).limit(1).toArray();
+
+    db.close();
+    console.log(result);
 });
-
-
-client.hmget('article_read_like', ['MzA3MTYyMTExNA==_2655640819_4','s', 'MzA3Njg2ODcxNw==_2671749791_2'] , (err, results) => {
-    for (let result of results) {
-        console.log(result);
-    }
-});
-
-client.quit();

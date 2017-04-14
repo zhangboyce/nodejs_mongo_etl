@@ -5,16 +5,17 @@ let utils = require('./utils');
 let co = require('co');
 let config = require('config');
 let ConnectMongo = require('./ConnectMongo');
+let ObjectID = require('mongodb').ObjectID;
 let Constant = require('../execute/Constant');
 
 module.exports = ExportProject;
 
-function ExportProject(exportCollection, criteria, fields, type, range) {
+function ExportProject(exportCollection, hours, type, range) {
     this.exportCollection = exportCollection;
-    this.criteria = criteria || {};
-    this.fields = fields || {};
+    this.hours = hours;
     this.type = type;
     this.range = range;
+    this.criteria = utils.criteria(hours);
 }
 
 ExportProject.exportProjects = function(options, exportCollection, convertorFtn) {
@@ -22,10 +23,7 @@ ExportProject.exportProjects = function(options, exportCollection, convertorFtn)
     let range = options.range;
     let type = options.type;
 
-    let criteria = utils.criteria(hours);
-    let fields = {  };
-
-    let exportProject = new ExportProject(exportCollection, criteria, fields, type, range);
+    let exportProject = new ExportProject(exportCollection, hours, type, range);
     exportProject.execute(convertorFtn(type));
 };
 
@@ -83,27 +81,38 @@ ExportProject.prototype.execute = function(callback) {
 
     function* exportProjects() {
         let start = Date.now();
-        let collection = this.exportCollection;
-        let count = yield this.exportDb.collection(collection).count(this.criteria);
+        let count = yield this.exportDb.collection(this.exportCollection).count(this.criteria);
 
         console.log(`Count ${count} ${this.type} projects, and take: ${ (Date.now() - start)/1000 } s.`);
 
         if (count > 0) {
             // init first query condition
-            let condition = utils.mergeCriteria(this.criteria);
+            let condition = Object.assign({}, this.criteria);
+
+            let i = 0, exportedCount = 0;
+            if (this.hours == 0) {
+                exportedCount = yield this.importDb.collection('projects').count({type: this.type});
+                console.log(`Had exported ${ exportedCount }, start with the ${ exportedCount }th.`);
+
+                if (exportedCount != 0) {
+                    let exported = yield this.importDb.collection('projects').find({ type: this.type }, {_id: 1}).sort({_id: -1}).limit(1).toArray();
+                    condition = { _id: { '$gt': exported[0]._id } }
+                }
+            }
+
+            if (exportedCount != 0) i = exportedCount / this.range;
             let step = Math.floor(count / this.range) + 1;
-            for (let i = 0; i < step; i++) {
-                condition = yield _step.apply(this, [condition, count, i]);
+            for (; i < step; i++) {
+                exportedCount = yield _step.apply(this, [condition, count, exportedCount]);
             }
         }
         return count;
     }
 
-    function* _step(condition, count, i) {
+    function* _step(condition, count, completed) {
 
         let start = Date.now();
-        let collection = this.exportCollection;
-        let cursor = this.exportDb.collection(collection).find(condition, this.fields).sort({_id: 1}).limit(this.range);
+        let cursor = this.exportDb.collection(this.exportCollection).find(condition).sort({_id: 1}).limit(this.range);
         let _results = yield cursor.toArray();
         if (_results.length > 0) {
             // for each every item, execute callback function to handle result.
@@ -118,11 +127,13 @@ ExportProject.prototype.execute = function(callback) {
             yield insertProjects.call(this, items);
 
             // update the next query condition, get the last result's _id
-            condition =  utils.mergeCriteria(this.criteria, _results[_results.length - 1]._id);
+            let objectId = _results[_results.length - 1]._id;
+            Object.assign(condition, { _id: Object.assign({}, condition._id || {}, { '$gt': objectId }) });
         }
-        console.log(`Export ${this.type} projects (completed=${this.range*i + _results.length}, count=${count}), condition: ${JSON.stringify(condition)}, and take: ${ (Date.now() - start)/1000 } s.`);
 
-        return condition;
+        console.log(`Export ${this.type} projects (completed=${ completed += _results.length }, count=${count}), condition: ${JSON.stringify(condition)}, and take: ${ (Date.now() - start)/1000 } s.`);
+
+        return completed;
     }
 
     function* insertProjects(items) {

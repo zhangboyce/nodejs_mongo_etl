@@ -31,7 +31,8 @@ function importProject (options) {
 
             if (count != 0) {
                 // init first query condition
-                let condition = utils.mergeCriteria(criteria);
+                let condition = Object.assign({}, criteria);
+
                 let step = Math.floor(count / range) + 1;
                 let completed = 0;
                 for (let i = 0; i < step; i++) {
@@ -47,14 +48,13 @@ function importProject (options) {
                     condition = utils.mergeCriteria(condition, lastId);
 
                     let _ids = _.map(projects, project => {
-                        return  project._id.toString();
+                        return  project._id;
                     });
 
                     let projectTextCursor = db.collection('projecttexts').find({_id: {$in: _ids}});
-                    let projectTexts = yield projectTextCursor.toArray();
+                    let projectTexts = yield projectTextCursor.toArray() || [];
 
                     console.log(`Query ${projectTexts.length} ${type} projectTexts`);
-                    if (projectTexts.length == 0) continue;
 
                     var projectTextMap = projectTexts.reduce((map, obj) => {
                         map[obj._id] = obj.text;
@@ -85,7 +85,7 @@ function importProject (options) {
 
                     if (elasticsearch.batchSize() != 0) {
                         completed += elasticsearch.batchSize();
-                        console.log(`Add (completed: ${completed}, count: ${count}) ${type} to es.`);
+                        console.log(`Add ${completed} ${type} projects to es.`);
                         yield elasticsearch.execute();
                     }
                 }

@@ -16,7 +16,6 @@ function convertWatchList2FeedSource(type) {
     return (result) => {
         let originId = type + '/' + result.id;
         let data = {
-            _id: result._id,
             id: result.id,
             name: result.full_name,
             type: type,
@@ -39,6 +38,7 @@ function convert2Project(type) {
 
             let tags = utils.extractTags(result.caption);
             return {
+                _id: result._id,
                 id: result.id,
                 title: '',
                 coverImg: {url: result.display_src},
