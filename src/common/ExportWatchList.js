@@ -68,7 +68,7 @@ ExportWatchList.prototype.execute = function(callback) {
         let batch = this.importDb.collection('feedsources').initializeUnorderedBulkOp({useLegacyOps: true});
         _.forEach(results, result => {
             let data = callback(result);
-            batch.find({originId: data.originId, type: data.type}).upsert().updateOne(data);
+            batch.find({originId: data.originId, type: data.type}).upsert().updateOne({ $set: data });
         });
 
         if (batch.length != 0) {

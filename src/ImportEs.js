@@ -135,6 +135,7 @@ function importFeedSource(options) {
                     type: feedsource.type,
                     originId: feedsource.originId,
                     readers: feedsource.readers,
+                    tags: feedsource.tags,
                     velocity: feedsource.velocity,
                     dateCreated: feedsource.dateCreated,
                     desc: feedsource.desc

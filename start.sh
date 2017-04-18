@@ -14,3 +14,6 @@ run -d feedsource -h 48 -i es -r 1000 -c '0 6 * * *' > "$path/es_feedsource.txt"
 run -d project -h 48 -i es -r 1000 -c '0 7 * * *' > "$path/es_project.txt" &
 
 run -d project -h 48 -i ral -t wechat -r 1000 -c '0 9 * * *' > "$path/redis_read_like.txt" &
+
+
+# --max-old-space-size=400
