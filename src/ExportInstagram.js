@@ -46,7 +46,7 @@ function convert2Project(type) {
                 originUrl: '',
                 type: type,
                 dateImported: new Date(),
-                datePublished: new Date(),
+                datePublished: result.date ? new Date(result.date*1000) : result.crawl_time,
                 tags: tags,
                 isDel: 0,
                 desc: result.caption,

@@ -122,22 +122,26 @@ let url = 'mongodb://raw:raw@dds-bp17568c88318c341.mongodb.rds.aliyuncs.com:3717
 //client.quit();
 
 
-let utils = require('./src/common/utils');
-let _ = require('lodash');
+//let utils = require('./src/common/utils');
+//let _ = require('lodash');
+//
+//let c = { _id: { '$gt': '0000000000000' } };
+//
+//console.log(utils.mergeCriteria(c));
+//
+//console.log(Object.assign({}, c, { _id: Object.assign({}, c._id, { '$gt': '999999999999' }) }));
+//
+//
+//let ConnectMongo = require('./src/common/ConnectMongo');
+//let co = require('co');
+//co(function *() {
+//    let db = yield ConnectMongo('mongodb://192.168.100.83:27017/boom');
+//    let result = yield db.collection('projects').find({}, { _id: 1 }).sort({ _id: -1 }).limit(1).toArray();
+//
+//    db.close();
+//    console.log(result);
+//});
 
-let c = { _id: { '$gt': '0000000000000' } };
-
-console.log(utils.mergeCriteria(c));
-
-console.log(Object.assign({}, c, { _id: Object.assign({}, c._id, { '$gt': '999999999999' }) }));
 
 
-let ConnectMongo = require('./src/common/ConnectMongo');
-let co = require('co');
-co(function *() {
-    let db = yield ConnectMongo('mongodb://192.168.100.83:27017/boom');
-    let result = yield db.collection('projects').find({}, { _id: 1 }).sort({ _id: -1 }).limit(1).toArray();
-
-    db.close();
-    console.log(result);
-});
+console.log(new Date("Sun Jul 24 10:23:48 +0000 2016"));

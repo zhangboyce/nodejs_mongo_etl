@@ -52,7 +52,7 @@ function convert2Project(type) {
                 originUrl: result.url,
                 type: type,
                 dateImported: new Date(),
-                datePublished: new Date(),
+                datePublished: result.crawl_time,
                 tags: tags,
                 isDel: 0,
                 desc: text_content && text_content.substring(0, 30),

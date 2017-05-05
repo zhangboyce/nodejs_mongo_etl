@@ -44,7 +44,7 @@ function convert2Project(type) {
             let { biz_name, text_content } = handleTextContent(result.html);
 
             let datetime = result.comm_msg_info && result.comm_msg_info.datetime;
-            let datePublished = datetime ? new Date(datetime*1000): new Date();
+            let datePublished = datetime ? new Date(datetime*1000): result.crawl_time;
 
             let id = [result.biz, result.mid, result.idx].join('_');
 

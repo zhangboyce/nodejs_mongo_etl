@@ -47,7 +47,7 @@ function convert2Project(type) {
                 originUrl: result.link,
                 type: type,
                 dateImported: new Date(),
-                datePublished: new Date(),
+                datePublished: result.created_time?new Date(result.created_time):result.crawl_time,
                 tags: tags,
                 isDel: 0,
                 desc: result.message,
