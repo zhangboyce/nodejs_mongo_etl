@@ -41,7 +41,7 @@ co(function* () {
                 console.log(`Update feed (_id: ${ it._id }) to inc score ${ inc_score } because of it has been inc subscribed ${ it.count } times.`);
             }
         }
-        
+
     } catch(e) {
         console.log(e);
     }
