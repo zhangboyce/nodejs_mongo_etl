@@ -63,7 +63,7 @@ function convert2Project(type) {
                 datePublished: datePublished,
                 tags: tags,
                 isDel: 0,
-                desc: result.digest || (text_content && text_content.substring(0, 30)),
+                desc: result.digest || (text_content && text_content.trim().substring(0, 30)),
 
                 html_content: handleHtml(result.html),
                 from: 'imported'
